@@ -22,7 +22,7 @@ variables:
   - name: IsRelease
     value: $[contains(variables['Build.SourceBranch'], '/release/')]
   - name: GoVersion
-    value: '1.23'
+    value: '1.23.3'
   - name: GoReleaserVersion
     value: 'v2.4.7'
   - name: GoBin
@@ -56,13 +56,13 @@ stages:
             useLightweightTags: true
             forceTagCreation: true
 
-  - stage: Build
-    displayName: "Build provider"
+  - stage: Build & Publish
+    displayName: "Build Binary"
     dependsOn: Pre_Release
     condition: or(eq(dependencies.Pre_Release.result,'Succeeded'), eq(dependencies.Pre_Release.result,'Skipped'))
     jobs:
       - job: Build_provider
-        displayName: "Build provider"
+        displayName: "Build Binary"
         steps:
         - checkout: self
           clean: ${{ parameters.clean }}
