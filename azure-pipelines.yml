@@ -126,8 +126,24 @@ stages:
             CleanTargetFolder: true
             OverWrite: true
             retryCount: '5'
-        - task: PublishBuildArtifacts@1
+        - task: JfrogCliV2@1
+          displayName: Upload Artifacts to Artifactory
           inputs:
-            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-            ArtifactName: 'dist'
-            publishLocation: 'Container'
+            jfrogPlatformConnection: 'JFrog Platform'
+            command: jf rt u "$(Build.ArtifactStagingDirectory)/*" "prd-go-virtual/charthost/${{ variables['TagName'] || 'build-' + Build.BuildNumber }}/"
+        - task: JfrogCliV2@1
+          displayName: Collect Build Info
+          inputs:
+            jfrogPlatformConnection: 'JFrog Platform'
+            command: jf rt bp "$(Build.DefinitionName)" "$(Build.BuildNumber)"
+        - task: JFrogPublishBuildInfo@1
+          displayName: Publish Build Info to Artifactory
+          inputs:
+            artifactoryConnection: 'JFrog Platform'
+            buildName: '$(Build.DefinitionName)'
+            buildNumber: '$(Build.BuildNumber)'
+#        - task: PublishBuildArtifacts@1
+#          inputs:
+#            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+#            ArtifactName: 'dist'
+#            publishLocation: 'Container'
