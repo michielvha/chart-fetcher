@@ -139,9 +139,10 @@ stages:
         - task: JFrogPublishBuildInfo@1
           displayName: Publish Build Info to Artifactory
           inputs:
-            artifactoryConnection: 'JFrog Platform'
+            artifactoryConnection: 'JFrog'
             buildName: '$(Build.DefinitionName)'
             buildNumber: '$(Build.BuildNumber)'
+            projectKey: 'prd'
 #        - task: PublishBuildArtifacts@1
 #          inputs:
 #            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
