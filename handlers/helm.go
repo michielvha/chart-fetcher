@@ -2,11 +2,14 @@ package handlers
 
 import (
     "fmt"
+    "os"
+    "io/ioutil"
+    "path/filepath"
+
 	"github.com/rs/zerolog/log"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/repo"
-	"helm.sh/helm/v3/pkg/getter"
 )
 
 type HelmHandler struct {
@@ -55,75 +58,99 @@ func (h *HelmHandler) Login(url, username, password string) error {
 	return nil
 }
 
-// adding helmrepo should not be needed.
-// func (h *HelmHandler) AddRepo(name, url, username, password string) error {
-// 	log.Info().
-// 		Str("name", name).
-// 		Str("url", url).
-// 		Msg("Adding Helm repository")
-//
-// 	entry := &repo.Entry{
-// 		Name:     name,
-// 		URL:      url,
-// 		Username: username,
-// 		Password: password,
-// 	}
-//
-// 	// Load the current repositories file
-// 	repoFile := h.Settings.RepositoryConfig
-// 	r, err := repo.LoadFile(repoFile)
-// 	if err != nil {
-// 		log.Error().
-// 			Err(err).
-// 			Str("repoFile", repoFile).
-// 			Msg("Failed to load repository configuration")
-// 		return err
-// 	}
-//
-// 	// Add the new repository
-// 	if err := r.Update(entry); err != nil {
-// 		log.Error().
-// 			Err(err).
-// 			Str("name", name).
-// 			Str("url", url).
-// 			Msg("Failed to add repository to configuration")
-// 		return err
-// 	}
-//
-// 	// Write the updated repositories file
-// 	if err := r.WriteFile(repoFile, 0644); err != nil {
-// 		log.Error().
-// 			Err(err).
-// 			Str("repoFile", repoFile).
-// 			Msg("Failed to write repository configuration")
-// 		return err
-// 	}
-//
-// 	log.Info().
-// 		Str("name", name).
-// 		Str("url", url).
-// 		Msg("Successfully added Helm repository")
-// 	return nil
-// }
-
-// This function allows you to pull helm charts
-func (h *HelmHandler) PullChart(repo, chart, version string) error {
-	chartRef := fmt.Sprintf("%s/%s:%s", repo, chart, version)
-
+// adding helm repo is needed since we are using a non OCI compliant registry
+func (h *HelmHandler) AddRepo(name, url, username, password string) error {
 	log.Info().
-		Str("chartRef", chartRef).
-		Msg("Attempting to pull Helm chart")
+		Str("name", name).
+		Str("url", url).
+		Msg("Adding Helm repository")
 
-	if err := h.RegistryClient.Pull(chartRef, getter.All(h.Settings)); err != nil {
+    // Create a new repository entry
+	entry := &repo.Entry{
+		Name:     name,
+		URL:      url,
+		Username: username,
+		Password: password,
+	}
+
+	// Load the current repositories file
+	repoFile := h.Settings.RepositoryConfig
+	r, err := repo.LoadFile(repoFile)
+	if err != nil {
 		log.Error().
 			Err(err).
-			Str("chartRef", chartRef).
-			Msg("Failed to pull Helm chart")
+			Str("repoFile", repoFile).
+			Msg("Failed to load repository configuration")
+		return err
+	}
+
+	// Add or update the new repository
+	r.Update(entry)
+
+	// Write the updated repositories file to disk
+	if err := r.WriteFile(repoFile, 0644); err != nil {
+		log.Error().
+			Err(err).
+			Str("repoFile", repoFile).
+			Msg("Failed to write repository configuration")
 		return err
 	}
 
 	log.Info().
-		Str("chartRef", chartRef).
-		Msg("Successfully pulled Helm chart")
+		Str("name", name).
+		Str("url", url).
+		Msg("Successfully added Helm repository")
 	return nil
 }
+
+// PullChart pulls a Helm chart from an OCI registry and saves it to disk
+func (h *HelmHandler) PullChart(repo, chart, version, outputPath string) error {
+    // Construct the chart reference with the version
+    chartRef := fmt.Sprintf("%s/%s:%s", repo, chart, version)
+
+    log.Info().
+        Str("chartRef", chartRef).
+        Msg("Attempting to pull Helm chart")
+
+    // Pull the chart using the registry client
+    pullResult, err := h.RegistryClient.Pull(chartRef)
+    if err != nil {
+        log.Error().
+            Err(err).
+            Str("chartRef", chartRef).
+            Msg("Failed to pull Helm chart")
+        return err
+    }
+
+    log.Info().
+        Str("chartRef", chartRef).
+        Msg("Successfully pulled Helm chart")
+
+    // Ensure the output directory exists
+    if err := os.MkdirAll(outputPath, 0755); err != nil {
+        log.Error().
+            Err(err).
+            Str("outputPath", outputPath).
+            Msg("Failed to create output directory")
+        return err
+    }
+
+    // Define the file path for the chart
+    chartFile := filepath.Join(outputPath, fmt.Sprintf("%s-%s.tgz", chart, version))
+
+    // Write the chart data to disk
+    if err := ioutil.WriteFile(chartFile, pullResult.Chart.Data, 0644); err != nil {
+        log.Error().
+            Err(err).
+            Str("chartFile", chartFile).
+            Msg("Failed to save Helm chart to disk")
+        return err
+    }
+
+    log.Info().
+        Str("chartFile", chartFile).
+        Msg("Successfully saved Helm chart to disk")
+    return nil
+}
+
+

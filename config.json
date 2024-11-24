@@ -1,0 +1,10 @@
+{
+  "registries": [
+    {
+      "url": "quay.io/kannika/charts",
+      "charts": [
+        { "name": "kannika", "version": "0.9.1" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+# Standard pipeline to release go apps for Azure-AWS
+parameters:
+- name: clean
+  displayName: Checkout clean
+  type: boolean
+  default: false
+  values:
+  - false
+  - true
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - release/*
+
+pool: K8S-AZURE-AWS
+
+variables:
+  - group: go-apps
+  - name: IsRelease
+    value: $[contains(variables['Build.SourceBranch'], '/release/')]
+  - name: GoVersion
+    value: '1.23'
+  - name: GoReleaserVersion
+    value: 'v2.4.7'
+  - name: GoBin
+    value: '$(System.DefaultWorkingDirectory)/gobin'
+  - name: ProjectName
+    value: charhost
+  - name: TagName
+    value: 'v$(Build.SourceBranchName)'
+  - name: ProviderVersion
+    value: $(Build.SourceBranchName)
+
+stages:
+  - stage: Pre_Release
+    displayName: "Tag branch"
+    condition: eq(variables['IsRelease'], 'True')
+    jobs:
+      - job: Tag_Branch
+        displayName: "Tag branch"
+        steps:
+        - checkout: self
+          clean: ${{ parameters.clean }}
+          persistCredentials: true
+        - task: GitTag@6
+          displayName: 'Tag branch $(TagName)'
+          inputs:
+            workingdir: '$(SYSTEM.DEFAULTWORKINGDIRECTORY)'
+            tagUser: 'ALM'
+            tagEmail: 'msbeluxisalm@engie.com'
+            tag: '$(TagName)'
+            tagMessage: 'Release $(TagName)'
+            useLightweightTags: true
+            forceTagCreation: true
+
+  - stage: Build
+    displayName: "Build provider"
+    dependsOn: Pre_Release
+    condition: or(eq(dependencies.Pre_Release.result,'Succeeded'), eq(dependencies.Pre_Release.result,'Skipped'))
+    jobs:
+      - job: Build_provider
+        displayName: "Build provider"
+        steps:
+        - checkout: self
+          clean: ${{ parameters.clean }}
+        - task: GoTool@0
+          displayName: 'Install GO v$(GoVersion)'
+          inputs:
+            version: '$(GoVersion)'
+            goBin: '$(GoBin)'
+        - task: Cache@2
+          displayName: 'Cache/Restore goreleaser $(GoReleaserVersion)'
+          inputs:
+            key: '"$(ProjectName)" | "$(Agent.OS) | "$(GoReleaserVersion)"'
+            path: '$(GoBin)'
+            cacheHitVar: 'CACHE_RESTORED'
+        - task: JFrogGo@1
+          displayName: 'Install goreleaser $(GoReleaserVersion)'
+          inputs:
+            command: 'custom'
+            customCommand: 'install'
+            goArguments: 'github.com/goreleaser/goreleaser@$(GoReleaserVersion)'
+            artifactoryConnection: 'JFrog'
+            resolutionRepo: 'prd-go-virtual'
+          condition: ne(variables.CACHE_RESTORED, 'true')
+        - task: Bash@3
+          displayName: 'Prepend GOBIN to PATH'
+          inputs:
+            targetType: 'inline'
+            script: |
+              echo '##vso[task.prependpath]$(GOBIN)'
+            workingDirectory: '$(System.DefaultWorkingDirectory)'
+        - task: DownloadSecureFile@1
+          name: pgpprivatekey
+          displayName: 'Download PGP private key'
+          inputs:
+            secureFile: 'PGP PRIVATE KEY BLOCK.txt'
+        - task: Bash@3
+          displayName: 'Import PGP key'
+          inputs:
+            targetType: 'inline'
+            script: |
+              gpg --import '$(pgpprivatekey.secureFilePath)'
+        - task: Bash@3
+          displayName: 'Build Go app'
+          inputs:
+            targetType: 'inline'
+            script: |
+              export GOPROXY="https://$(JFROGUSER):$(JFROGTOKEN)@engiebnlms.jfrog.io/artifactory/api/go/prd-go-virtual"
+              goreleaser build --rm-dist
+            workingDirectory: '$(System.DefaultWorkingDirectory)'
+          env:
+            JFROGTOKEN: '$(JFROGTOKEN)' #Map secret
+        - task: CopyFiles@2
+          inputs:
+            SourceFolder: 'dist'
+            Contents: '**'
+            TargetFolder: '$(Build.ArtifactStagingDirectory)'
+            CleanTargetFolder: true
+            OverWrite: true
+            retryCount: '5'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+            ArtifactName: 'dist'
+            publishLocation: 'Container'
