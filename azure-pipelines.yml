@@ -56,7 +56,7 @@ stages:
             useLightweightTags: true
             forceTagCreation: true
 
-  - stage: Build & Publish
+  - stage: Build_and_Publish
     displayName: "Build Binary"
     dependsOn: Pre_Release
     condition: or(eq(dependencies.Pre_Release.result,'Succeeded'), eq(dependencies.Pre_Release.result,'Skipped'))
