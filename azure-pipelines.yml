@@ -66,6 +66,9 @@ stages:
         steps:
         - checkout: self
           clean: ${{ parameters.clean }}
+          fetchTags: true
+          persistCredentials: true
+          shallowFetch: false
         - task: GoTool@0
           displayName: 'Install GO v$(GoVersion)'
           inputs:
@@ -114,7 +117,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              goreleaser build
+              goreleaser build --snapshot
             workingDirectory: '$(System.DefaultWorkingDirectory)'
         - task: CopyFiles@2
           inputs:
