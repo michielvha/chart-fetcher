@@ -61,4 +61,14 @@ release:
 #      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   draft: false
 changelog:
-  skip: true
+  filters:
+    include:
+      - main
+  sort: asc # Sort commits chronologically (oldest to newest)
+  template: |
+    ## Changelog for {{ .Tag }}
+
+    {{ range .Entries -}}
+    - {{ .Message }} ({{ .Commit }})
+    {{ end }}
+
