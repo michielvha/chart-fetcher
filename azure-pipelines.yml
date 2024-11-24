@@ -104,16 +104,18 @@ stages:
             targetType: 'inline'
             script: |
               gpg --import '$(pgpprivatekey.secureFilePath)'
+        - task: JfrogCliV2@1
+          displayName: Configure Artifactory for Go modules
+          inputs:
+            jfrogPlatformConnection: 'JFrog Platform' # Replace with your actual service connection name
+            command: jf go-config --server-id-resolve="1ba894ff-0587-466f-afaa-721bbc527d28" --repo-resolve="prd-go-virtual"
         - task: Bash@3
           displayName: 'Build Go app'
           inputs:
             targetType: 'inline'
             script: |
-              export GOPROXY="https://$(JFROGUSER):$(JFROGTOKEN)@engiebnlms.jfrog.io/artifactory/api/go/prd-go-virtual"
-              goreleaser build --rm-dist
+              goreleaser build
             workingDirectory: '$(System.DefaultWorkingDirectory)'
-          env:
-            JFROGTOKEN: '$(JFROGTOKEN)' #Map secret
         - task: CopyFiles@2
           inputs:
             SourceFolder: 'dist'
