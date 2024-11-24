@@ -130,7 +130,7 @@ stages:
           displayName: Upload Artifacts to Artifactory
           inputs:
             jfrogPlatformConnection: 'JFrog Platform'
-            command: jf rt u "$(Build.ArtifactStagingDirectory)/*" "prd-go-virtual/charthost/$(TagName)/"
+            command: jf rt u "$(Build.ArtifactStagingDirectory)/*" "prd-go-local/charthost/v$(TagName)/"
         - task: JfrogCliV2@1
           displayName: Collect Build Info
           inputs:
