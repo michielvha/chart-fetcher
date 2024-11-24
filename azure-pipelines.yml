@@ -18,7 +18,7 @@ trigger:
 pool: K8S-AZURE-AWS
 
 variables:
-  - group: go-apps
+#  - group: go-apps
   - name: IsRelease
     value: $[contains(variables['Build.SourceBranch'], '/release/')]
   - name: GoVersion
@@ -28,7 +28,7 @@ variables:
   - name: GoBin
     value: '$(System.DefaultWorkingDirectory)/gobin'
   - name: ProjectName
-    value: charhost
+    value: 'charhost'
   - name: TagName
     value: 'v$(Build.SourceBranchName)'
   - name: ProviderVersion
