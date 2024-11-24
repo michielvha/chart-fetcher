@@ -82,7 +82,7 @@ stages:
           inputs:
             command: 'custom'
             customCommand: 'install'
-            goArguments: 'github.com/goreleaser/goreleaser@$(GoReleaserVersion)'
+            goArguments: 'github.com/goreleaser/goreleaser/v2@$(GoReleaserVersion)'
             artifactoryConnection: 'JFrog'
             resolutionRepo: 'prd-go-virtual'
           condition: ne(variables.CACHE_RESTORED, 'true')
