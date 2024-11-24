@@ -116,7 +116,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              goreleaser build --snapshot
+              goreleaser build --snapshot --clean
             workingDirectory: '$(System.DefaultWorkingDirectory)'
         - task: CopyFiles@2
           inputs:
