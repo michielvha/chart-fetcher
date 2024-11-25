@@ -2,19 +2,24 @@ package handlers
 
 import (
     "fmt"
+    "strings"
+    "net/url"
     "os"
+    "net/http"
     "io/ioutil"
     "path/filepath"
+    "io"
 
 	"github.com/rs/zerolog/log"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
-	"helm.sh/helm/v3/pkg/repo"
+	helmrepo "helm.sh/helm/v3/pkg/repo"
 )
 
 type HelmHandler struct {
 	RegistryClient *registry.Client
 	Settings       *cli.EnvSettings
+	RepoNames      map[string]string // Map to store URL -> RepoName
 }
 
 // NewHelmHandler initializes and returns a HelmHandler
@@ -58,24 +63,124 @@ func (h *HelmHandler) Login(url, username, password string) error {
 	return nil
 }
 
+func (h *HelmHandler) EnsureRepoFileExists() error {
+    repoFile := h.Settings.RepositoryConfig
+
+    // Check if the repository file exists
+    if _, err := os.Stat(repoFile); os.IsNotExist(err) {
+        // Create the directory if it doesn't exist
+        if err := os.MkdirAll(filepath.Dir(repoFile), 0755); err != nil {
+            log.Error().Err(err).Msg("Failed to create repository config directory")
+            return err
+        }
+
+        // Initialize an empty repositories.yaml
+        emptyRepoFile := helmrepo.NewFile()
+        if err := emptyRepoFile.WriteFile(repoFile, 0644); err != nil {
+            log.Error().Err(err).Msg("Failed to create empty repository config file")
+            return err
+        }
+
+        log.Info().Str("repoFile", repoFile).Msg("Initialized new repositories.yaml")
+    }
+
+    return nil
+}
+
+func (h *HelmHandler) FetchRepoIndex(repoURL, username, password string) error {
+    repoName, exists := h.RepoNames[repoURL]
+    if !exists {
+        log.Error().Str("url", repoURL).Msg("Repository name not found")
+        return fmt.Errorf("repository name for URL %s not found", repoURL)
+    }
+
+    log.Info().
+        Str("url", repoURL).
+        Str("name", repoName).
+        Msg("Fetching repository index")
+
+    // Define the index file path
+    cacheDir := h.Settings.RepositoryCache
+    indexFile := filepath.Join(cacheDir, fmt.Sprintf("%s-index.yaml", repoName))
+
+    // Prepare the HTTP client
+    client := &http.Client{}
+
+    // Create the request with basic authentication
+    req, err := http.NewRequest("GET", fmt.Sprintf("%s/index.yaml", repoURL), nil)
+    if err != nil {
+        log.Error().Err(err).Str("url", repoURL).Msg("Failed to create request for repository index")
+        return err
+    }
+
+    // Add authentication if credentials exist
+    if username != "" && password != "" {
+        req.SetBasicAuth(username, password)
+    }
+
+    // Execute the request
+    resp, err := client.Do(req)
+    if err != nil {
+        log.Error().Err(err).Str("url", repoURL).Msg("Failed to fetch repository index")
+        return err
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        log.Error().Int("statusCode", resp.StatusCode).Str("url", repoURL).Msg("Unexpected status while fetching repository index")
+        return fmt.Errorf("unexpected status: %d", resp.StatusCode)
+    }
+
+    // Save the index file to the cache directory
+    data, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        log.Error().Err(err).Msg("Failed to read repository index")
+        return err
+    }
+    if err := ioutil.WriteFile(indexFile, data, 0644); err != nil {
+        log.Error().Err(err).Str("indexFile", indexFile).Msg("Failed to write repository index")
+        return err
+    }
+
+    log.Info().
+        Str("indexFile", indexFile).
+        Msg("Successfully fetched repository index")
+    return nil
+}
+
 // adding helm repo is needed since we are using a non OCI compliant registry
-func (h *HelmHandler) AddRepo(name, url, username, password string) error {
+func (h *HelmHandler) AddRepo(repoURL, username, password string) error {
+    // Ensure the repositories file exists
+    if err := h.EnsureRepoFileExists(); err != nil {
+        return err
+    }
+
+    // Parse the URL to extract the repository name
+    parsedURL, err := url.Parse(repoURL)
+    if err != nil {
+        log.Error().Err(err).Str("url", repoURL).Msg("Invalid repository URL")
+        return err
+    }
+    // Get the last segment from the URL path
+    segments := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
+    name := segments[len(segments)-1]
+
 	log.Info().
 		Str("name", name).
-		Str("url", url).
+		Str("url", repoURL).
 		Msg("Adding Helm repository")
 
     // Create a new repository entry
-	entry := &repo.Entry{
+	entry := &helmrepo.Entry{
 		Name:     name,
-		URL:      url,
+		URL:      repoURL,
 		Username: username,
 		Password: password,
 	}
 
 	// Load the current repositories file
 	repoFile := h.Settings.RepositoryConfig
-	r, err := repo.LoadFile(repoFile)
+	r, err := helmrepo.LoadFile(repoFile)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -96,61 +201,199 @@ func (h *HelmHandler) AddRepo(name, url, username, password string) error {
 		return err
 	}
 
+    // Save the name to the RepoNames map
+    if h.RepoNames == nil {
+        h.RepoNames = make(map[string]string)
+    }
+    h.RepoNames[repoURL] = name
+
 	log.Info().
 		Str("name", name).
-		Str("url", url).
+		Str("url", repoURL).
 		Msg("Successfully added Helm repository")
 	return nil
 }
 
-// PullChart pulls a Helm chart from an OCI registry and saves it to disk
-func (h *HelmHandler) PullChart(repo, chart, version, outputPath string) error {
-    // Construct the chart reference with the version
-    chartRef := fmt.Sprintf("%s/%s:%s", repo, chart, version)
+// // PullChart pulls a Helm chart from an OCI registry and saves it to disk
+// func (h *HelmHandler) PullChart(repo, chart, version, outputPath string) error {
+//     // Construct the chart reference with the version
+//     chartRef := fmt.Sprintf("%s/%s:%s", repo, chart, version)
+//
+//     log.Info().
+//         Str("chartRef", chartRef).
+//         Msg("Attempting to pull Helm chart")
+//
+//     // Pull the chart using the registry client
+//     pullResult, err := h.RegistryClient.Pull(chartRef)
+//     if err != nil {
+//         log.Error().
+//             Err(err).
+//             Str("chartRef", chartRef).
+//             Msg("Failed to pull Helm chart")
+//         return err
+//     }
+//
+//     log.Info().
+//         Str("chartRef", chartRef).
+//         Msg("Successfully pulled Helm chart")
+//
+//     // Ensure the output directory exists
+//     if err := os.MkdirAll(outputPath, 0755); err != nil {
+//         log.Error().
+//             Err(err).
+//             Str("outputPath", outputPath).
+//             Msg("Failed to create output directory")
+//         return err
+//     }
+//
+//     // Define the file path for the chart
+//     chartFile := filepath.Join(outputPath, fmt.Sprintf("%s-%s.tgz", chart, version))
+//
+//     // Write the chart data to disk
+//     if err := ioutil.WriteFile(chartFile, pullResult.Chart.Data, 0644); err != nil {
+//         log.Error().
+//             Err(err).
+//             Str("chartFile", chartFile).
+//             Msg("Failed to save Helm chart to disk")
+//         return err
+//     }
+//
+//     log.Info().
+//         Str("chartFile", chartFile).
+//         Msg("Successfully saved Helm chart to disk")
+//     return nil
+// }
 
+// new pull functions, seperation between OCI complaint and non OCI compliant.repository
+
+// PullLegacyChart pulls a Helm chart from a non-OCI-compliant repository
+func (h *HelmHandler) PullLegacyChart(repo, chart, version, outputPath, username, password string) error {
     log.Info().
-        Str("chartRef", chartRef).
-        Msg("Attempting to pull Helm chart")
+        Str("chart", chart).
+        Str("version", version).
+        Msg("Attempting to pull legacy Helm chart")
 
-    // Pull the chart using the registry client
-    pullResult, err := h.RegistryClient.Pull(chartRef)
+    // Resolve the repository name
+    repoName, exists := h.RepoNames[repo]
+    if !exists {
+        log.Error().Str("repo", repo).Msg("Repository not found in RepoNames map")
+        return fmt.Errorf("repository not found: %s", repo)
+    }
+
+    // Load the index file
+    indexFile := filepath.Join(h.Settings.RepositoryCache, fmt.Sprintf("%s-index.yaml", repoName))
+    index, err := helmrepo.LoadIndexFile(indexFile)
+    if err != nil {
+        log.Error().Err(err).Str("indexFile", indexFile).Msg("Failed to load repository index file")
+        return err
+    }
+
+    // Find the chart version
+    chartVersion, err := index.Get(chart, version)
     if err != nil {
         log.Error().
             Err(err).
-            Str("chartRef", chartRef).
-            Msg("Failed to pull Helm chart")
+            Str("chart", chart).
+            Str("version", version).
+            Msg("Chart version not found in index")
         return err
     }
 
-    log.Info().
-        Str("chartRef", chartRef).
-        Msg("Successfully pulled Helm chart")
+    // Resolve the chart URL
+    chartURL := chartVersion.URLs[0]
+    if !strings.HasPrefix(chartURL, "http") {
+        chartURL = fmt.Sprintf("%s/%s", strings.TrimSuffix(repo, "/"), chartURL)
+    }
 
-    // Ensure the output directory exists
+    log.Info().Str("chartURL", chartURL).Msg("Resolved chart URL")
+
+    // Prepare the HTTP client and request
+    client := &http.Client{}
+    req, err := http.NewRequest("GET", chartURL, nil)
+    if err != nil {
+        log.Error().Err(err).Str("chartURL", chartURL).Msg("Failed to create request for legacy chart")
+        return err
+    }
+
+    // Add authentication if credentials are provided
+    if username != "" && password != "" {
+        req.SetBasicAuth(username, password)
+    }
+
+    // Execute the request
+    resp, err := client.Do(req)
+    if err != nil {
+        log.Error().Err(err).Str("chartURL", chartURL).Msg("Failed to fetch legacy chart")
+        return err
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        log.Error().Int("statusCode", resp.StatusCode).Str("chartURL", chartURL).Msg("Unexpected status code while fetching legacy chart")
+        return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+    }
+
+    // Save the chart to disk
+    chartFile := filepath.Join(outputPath, filepath.Base(chartURL))
     if err := os.MkdirAll(outputPath, 0755); err != nil {
-        log.Error().
-            Err(err).
-            Str("outputPath", outputPath).
-            Msg("Failed to create output directory")
+        log.Error().Err(err).Str("outputPath", outputPath).Msg("Failed to create output directory")
         return err
     }
+    file, err := os.Create(chartFile)
+    if err != nil {
+        log.Error().Err(err).Str("chartFile", chartFile).Msg("Failed to create chart file")
+        return err
+    }
+    defer file.Close()
 
-    // Define the file path for the chart
-    chartFile := filepath.Join(outputPath, fmt.Sprintf("%s-%s.tgz", chart, version))
-
-    // Write the chart data to disk
-    if err := ioutil.WriteFile(chartFile, pullResult.Chart.Data, 0644); err != nil {
-        log.Error().
-            Err(err).
-            Str("chartFile", chartFile).
-            Msg("Failed to save Helm chart to disk")
+    if _, err := io.Copy(file, resp.Body); err != nil {
+        log.Error().Err(err).Str("chartFile", chartFile).Msg("Failed to write legacy chart data to file")
         return err
     }
 
     log.Info().
         Str("chartFile", chartFile).
-        Msg("Successfully saved Helm chart to disk")
+        Msg("Successfully pulled legacy Helm chart")
     return nil
 }
 
+func (h *HelmHandler) PullOCIChart(repo, chart, version, outputPath string) error {
+    // Construct the OCI reference
+    chartRef := fmt.Sprintf("%s/%s:%s", repo, chart, version)
+
+    log.Info().
+        Str("chartRef", chartRef).
+        Msg("Attempting to pull OCI Helm chart")
+
+    // Pull the chart using the Helm Registry Client
+    pullResult, err := h.RegistryClient.Pull(chartRef)
+    if err != nil {
+        log.Error().
+            Err(err).
+            Str("chartRef", chartRef).
+            Msg("Failed to pull OCI Helm chart")
+        return err
+    }
+
+    log.Info().
+        Str("chartRef", chartRef).
+        Msg("Successfully pulled OCI Helm chart")
+
+    // Save the chart to disk
+    if err := os.MkdirAll(outputPath, 0755); err != nil {
+        log.Error().Err(err).Str("outputPath", outputPath).Msg("Failed to create output directory")
+        return err
+    }
+
+    chartFile := filepath.Join(outputPath, fmt.Sprintf("%s-%s.tgz", chart, version))
+    if err := ioutil.WriteFile(chartFile, pullResult.Chart.Data, 0644); err != nil {
+        log.Error().Err(err).Str("chartFile", chartFile).Msg("Failed to write OCI chart to file")
+        return err
+    }
+
+    log.Info().
+        Str("chartFile", chartFile).
+        Msg("Successfully saved OCI Helm chart to disk")
+    return nil
+}
 
