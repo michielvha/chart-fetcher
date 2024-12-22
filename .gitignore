@@ -5,6 +5,15 @@
 *.so
 *.dylib
 
+# Ignore core dump files in pipeline.
+core.*
+
+# Ignore gobin directory in pipeline.
+gobin/
+
+# ignore artifactory url file in pipeline.
+artifactoryUrlFile
+
 # Test binary, built with `go test -c`
 *.test
 

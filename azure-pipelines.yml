@@ -1,4 +1,6 @@
 # Standard pipeline to release go apps for Azure-AWS
+# [Gitversion examples](https://github.com/GitTools/actions/tree/main/docs/examples/azure/gitversion)
+# TODO: Modify pipeline to auto increment patch version using gitVersion & Keep release branching strategy. Write proper docs for the pipeline.
 parameters:
 - name: clean
   displayName: Checkout clean
@@ -14,11 +16,13 @@ trigger:
     include:
     - main
     - release/*
+  paths:                    # docs are only for repository and can be ignored for this pipeline
+    exclude:
+      - readme.md
 
 pool: K8S-AZURE-AWS
 
 variables:
-#  - group: go-apps
   - name: IsRelease
     value: $[contains(variables['Build.SourceBranch'], '/release/')]
   - name: GoVersion
@@ -28,38 +32,72 @@ variables:
   - name: GoBin
     value: '$(System.DefaultWorkingDirectory)/gobin'
   - name: ProjectName
-    value: 'charhost'
+    value: 'charthost'
   - name: TagName
     value: 'v$(Build.SourceBranchName)'
   - name: ProviderVersion
     value: $(Build.SourceBranchName)
 
+resources:
+  repositories:
+    - repository: pipelineTemplates
+      type: git
+      name: pipelineTemplates
+
 stages:
   - stage: Pre_Release
     displayName: "Tag branch"
-    condition: eq(variables['IsRelease'], 'True')
+#    condition: eq(variables['IsRelease'], 'True')
     jobs:
-      - job: Tag_Branch
-        displayName: "Tag branch"
-        steps:
-        - checkout: self
-          clean: ${{ parameters.clean }}
-          persistCredentials: true
-        - task: GitTag@6
-          displayName: 'Tag branch $(TagName)'
-          inputs:
-            workingdir: '$(SYSTEM.DEFAULTWORKINGDIRECTORY)'
-            tagUser: 'ALM'
-            tagEmail: 'msbeluxisalm@engie.com'
-            tag: '$(TagName)'
-            tagMessage: 'Release $(TagName)'
-            useLightweightTags: true
-            forceTagCreation: true
+    - template: gitversion/gvtag.yml@pipelineTemplates
+#      parameters:
+#        gitVersionConfigFile: 'GitVersion.yml'
+
+#      - job: Tag_Branch
+#        displayName: "Tag branch"
+#        steps:
+#        - checkout: self
+#          clean: ${{ parameters.clean }}
+#          persistCredentials: true
+#          fetchDepth: 0
+#        - task: GitTag@6
+#          displayName: 'Tag branch $(TagName)'
+#          inputs:
+#            workingdir: '$(SYSTEM.DEFAULTWORKINGDIRECTORY)'
+#            tagUser: 'ALM'
+#            tagEmail: 'msbeluxisalm@engie.com'
+#            tag: '$(TagName)'
+#            tagMessage: 'Release $(TagName)'
+#            useLightweightTags: true
+#            forceTagCreation: true
+#        - task: gitversion/setup@3.0.3
+#          displayName: 'Install GitVersion'
+#          inputs:
+#            versionSpec: '6.0.0'
+#        - task: gitversion/execute@3
+#          displayName: 'Determine version with GitVersion'
+#          inputs:
+#            useConfigFile: true
+#            configFilePath: 'GitVersion.yml'
+#        - task: Bash@3
+#          displayName: 'Tag and Push Version'
+#          inputs:
+#            targetType: 'inline'
+#            script: |
+#              echo "Tagging version $(GitVersion.FullSemVer)"
+#              git tag -a $(GitVersion.FullSemVer) -m "Release version $(GitVersion.FullSemVer)"
+#              git push origin $(GitVersion.FullSemVer)
+#              echo "Setting VERSION to $(GitVersion.FullSemVer)"
+#              echo "##vso[task.setvariable variable=VERSION]$(GitVersion.FullSemVer)"
+#          env:
+#            GIT_AUTHOR_NAME: 'Azure-AWS'
+#            GIT_AUTHOR_EMAIL: 'mslocalfoundation.bnl@engie.com'
+
 
   - stage: Build_and_Publish
     displayName: "Build Binary"
     dependsOn: Pre_Release
-    condition: or(eq(dependencies.Pre_Release.result,'Succeeded'), eq(dependencies.Pre_Release.result,'Skipped'))
+#    condition: or(eq(dependencies.Pre_Release.result,'Succeeded'), eq(dependencies.Pre_Release.result,'Skipped'))
     jobs:
       - job: Build_provider
         displayName: "Build Binary"
@@ -68,6 +106,7 @@ stages:
           clean: ${{ parameters.clean }}
           fetchTags: true
           persistCredentials: true
+          fetchDepth: 0
         - task: GoTool@0
           displayName: 'Install GO v$(GoVersion)'
           inputs:
@@ -116,7 +155,8 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              goreleaser build --snapshot --clean
+              echo "Building with version: $(Build.BuildNumber)"
+              goreleaser build --clean
             workingDirectory: '$(System.DefaultWorkingDirectory)'
         - task: CopyFiles@2
           inputs:
@@ -130,7 +170,7 @@ stages:
           displayName: Upload Artifacts to Artifactory
           inputs:
             jfrogPlatformConnection: 'JFrog Platform'
-            command: jf rt u "$(Build.ArtifactStagingDirectory)/*" "prd-go-local/charthost/v$(TagName)/"
+            command: jf rt u "$(Build.ArtifactStagingDirectory)/*" "prd-go-local/$(ProjectName)/$(Build.BuildNumber)/" --flat=true
         - task: JfrogCliV2@1
           displayName: Collect Build Info
           inputs:
@@ -140,9 +180,10 @@ stages:
           displayName: Publish Build Info to Artifactory
           inputs:
             artifactoryConnection: 'JFrog'
-            buildName: '$(Build.DefinitionName)'
-            buildNumber: '$(Build.BuildNumber)'
+            buildName: '$(Build.DefinitionName)'                  # this translates to "charthost" in our case
+            buildNumber: '$(Build.BuildNumber)'                   # this one is set to the same version as GitVersion saved in global variable VERSION, this is being handled automatically since version 6
             projectKey: 'prd'
+         # replaced by JFrogPublishBuildInfo@1, this one below uploads to Azure DevOps artifactory
 #        - task: PublishBuildArtifacts@1
 #          inputs:
 #            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
