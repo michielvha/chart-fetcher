@@ -112,6 +112,16 @@ You seem to need to add repo to be able to pull from Artifactory
 go mod init dev.azure.com/bnl-ms/AzureFoundation/charthost
 ```
 
+# upcoming features
+- **Pipeline**:
+  - linting
+  - vulnerability scan
+  - auto gen release notes
+  - Generate container
+- **Application**:
+  - proper output on run
+  - create container template
+
 # Changelog
 
 ## Version 1.0.1
