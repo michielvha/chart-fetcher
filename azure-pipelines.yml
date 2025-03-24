@@ -192,7 +192,7 @@ stages:
               repository: "prd-docker-virtual/$(ProjectName)"
               tags: $(imageTag)
               dockerfile: '$(System.DefaultWorkingDirectory)/Dockerfile'
-              buildContext: '$(System.DefaultWorkingDirectory)/$(ProjectName)'
+              buildContext: '$(System.DefaultWorkingDirectory)'
               arguments: |
                 --build-arg IMAGE_NAME=$(ProjectName)
                 --push
