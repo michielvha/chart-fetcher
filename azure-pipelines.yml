@@ -212,7 +212,7 @@ stages:
               command: |
                 jf rt sp "engie.owner=${{ variables.owner }}" --build "$(ProjectName)/$(Build.BuildNumber)"
                 jf rt sp "engie.assetPriority=${{ variables.engieAssetPriority }}" --build "$(ProjectName)/$(Build.BuildNumber)"
-                jf rt sp "engie.application=$(ProjectName) --build "$(ProjectName)/$(Build.BuildNumber)"
+                jf rt sp "engie.application=$(ProjectName)" --build "$(ProjectName)/$(Build.BuildNumber)"
                 jf rt sp "engie.assetClassification=${{ variables.engieAssetClassification }}" --build "$(ProjectName)/$(Build.BuildNumber)"
 
 
