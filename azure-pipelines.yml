@@ -160,6 +160,13 @@ stages:
             inputs:
               jfrogPlatformConnection: 'JFrog Platform'
               command: jf rt dl "prd-go-local/$(ProjectName)/$(Build.BuildNumber)/$(ProjectName)_v$(Build.BuildNumber)" "$(System.DefaultWorkingDirectory)/$(ProjectName)" --flat
+          - task: Bash@3
+            displayName: "Rename binary to match docker expected input: $(ProjectName)"
+            inputs:
+              targetType: inline
+              script: |
+                mv "$(System.DefaultWorkingDirectory)/$(ProjectName)/$(ProjectName)_v$(Build.BuildNumber)" \
+                "$(System.DefaultWorkingDirectory)/$(ProjectName)"
           - task: Docker@2
             displayName: Docker login
             inputs:
