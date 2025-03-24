@@ -1,4 +1,5 @@
 // helpers/config.go
+// Purpose: help with handling the configuration file.
 package helpers
 
 import (

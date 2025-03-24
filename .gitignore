@@ -25,3 +25,5 @@ artifactoryUrlFile
 .idea
 
 charts/**
+
+.env

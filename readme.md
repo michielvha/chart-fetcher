@@ -1,8 +1,8 @@
-# **Charthost**
+# **ChartFetch**
 
-The `Charthost` Go application is a solution designed to address a limitation in our GitOps workflow, which utilizes **ArgoCD** and **Kustomize**. 
+The `chartfetch` Go application is a solution designed to address a limitation in our GitOps workflow, which utilizes **ArgoCD** and **Kustomize**. 
 
-Our challenge lies in pulling Helm charts from an authenticated registry (Jfrog), as ArgoCD's Kustomize plugin does not support chart retrieval from registries requiring authentication. To bridge this gap, `Charthost` acts as an intermediary application capable of:
+Our challenge lies in pulling Helm charts from an authenticated registry (Jfrog), as ArgoCD's Kustomize plugin does not support chart retrieval from registries requiring authentication. To bridge this gap, `chartfetch` acts as an intermediary application capable of:
 - Authenticating with both legacy and OCI-compliant Helm registries.
 - Pulling Helm charts and making them accessible for seamless integration into the GitOps workflow.
 
@@ -100,16 +100,16 @@ helm registry login mslocalfoundationacr.azurecr.io --username $REG1_USERNAME --
 
 #### Login to Artifactory
 
-You seem to need to add repo to be able to pull from Artifactory
+To work with Go repositories, first install and configure your Go client. To deploy Go packages into an Artifactory repository, you first need to install and configure JFrog CLI. To start using JFrog CLI, configure the Artifactory server details.
 
-````shell 
-
+````shell
+jf c add rt-server --artifactory-url https://engiebnlms.jfrog.io/artifactory --user dl6544 --password $TOKEN --interactive=false
 ````
 
 #### initialize Go project using Azure-Devops
 
 ```golang
-go mod init dev.azure.com/bnl-ms/AzureFoundation/charthost
+go mod init dev.azure.com/bnl-ms/AzureFoundation/chartfetch
 ```
 
 # upcoming features
@@ -124,15 +124,17 @@ go mod init dev.azure.com/bnl-ms/AzureFoundation/charthost
 
 # Changelog
 
-## Version 1.0.1
+## Version 0.0.2
 ### ⚙️ Patches
 - **Code cleanup**
   - Combined `AddRepo` & `FetchRepoIndex` into a single method.
   - Decoupled `Login` & `AddRepo` methods to allow for proper authentication. OCI uses `login + OCI pull`, while legacy uses `AddRepo + legacy pull`.
   - Made the code more modular by creating helper functions for common tasks.
-## Version 1.0.0
+  - seperated helm functions into separate files for readability.
+  - removed `ioutil` package because [deprecated & redundant](https://go.dev/doc/go1.16#ioutil), incorporated into and since maintained in `io` & `os`.
+## Version 0.0.1
 ### 🚀 Major Release
-- **Initial Release of Charthost**
+- **Initial Release of ChartFetch**
   - Added support for json & yaml configuration files
   - Added support for environment variables
   - Added support for command line arguments
