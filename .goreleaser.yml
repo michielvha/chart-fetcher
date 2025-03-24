@@ -1,4 +1,4 @@
-project_name: charthost
+project_name: chartfetch
 version: 2
 
 # Visit https://goreleaser.com for documentation on how to customize this
