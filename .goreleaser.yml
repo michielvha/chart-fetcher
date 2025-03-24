@@ -31,7 +31,7 @@ builds:
       - goos: darwin
         goarch: "386"
     no_unique_dist_dir: true
-    binary: '{{ .ProjectName }}_v{{ .Version }}' # TODO: Decide if we want to keep the _v there instead of just _, pipeline needs to be adjusted if changed
+    binary: '{{ .ProjectName }}' # _v{{ .Version }} # DONE: Decide if we want to keep the _v there instead of just _, pipeline needs to be adjusted if changed
 snapshot:
   version_template: '{{ incpatch .Version }}'
 archives:
