@@ -41,7 +41,8 @@ variables:
     value: P4
   - name: engieAssetClassification
     value: internal
-
+  - name: owner
+    value: azure-aws
 
 
 resources:
