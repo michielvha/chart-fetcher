@@ -110,7 +110,7 @@ stages:
         - task: JfrogCliV2@1
           displayName: Configure Artifactory for Go modules
           inputs:
-            jfrogPlatformConnection: 'JFrog Platform' # Replace with your actual service connection name
+            jfrogPlatformConnection: 'JFrog Platform'
             command: jf go-config --server-id-resolve="1ba894ff-0587-466f-afaa-721bbc527d28" --repo-resolve="prd-go-virtual"
         - task: Bash@3
           displayName: 'Build Go app'
@@ -159,20 +159,13 @@ stages:
             displayName: Download Artifact from Artifactory
             inputs:
               jfrogPlatformConnection: 'JFrog Platform'
-              command: jf rt dl "prd-go-local/$(ProjectName)/$(Build.BuildNumber)/$(ProjectName)" "$(System.DefaultWorkingDirectory)" --flat
+              command: jf rt dl "prd-go-local/$(ProjectName)/$(Build.BuildNumber)/$(ProjectName)" "$(System.DefaultWorkingDirectory)/$(ProjectName)" --flat
           - task: Bash@3
             displayName: "debug"
             inputs:
               targetType: inline
               script: |
                 ls -al $(System.DefaultWorkingDirectory)/$(ProjectName)
-          - task: Bash@3
-            displayName: "Rename binary to match docker expected input: $(ProjectName)"
-            inputs:
-              targetType: inline
-              script: |
-                mv "$(System.DefaultWorkingDirectory)/$(ProjectName)/$(ProjectName)_v$(Build.BuildNumber)" \
-                "$(System.DefaultWorkingDirectory)/$(ProjectName)"
           - task: Docker@2
             displayName: Docker login
             inputs:
