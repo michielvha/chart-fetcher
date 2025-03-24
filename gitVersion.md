@@ -1,4 +1,4 @@
-GitVersion provides several **modes** that determine how version numbers are calculated based on your branching and commit strategy. These modes cater to different workflows, like feature branching, continuous integration, or release management. Below are all the available modes:
+[GitVersion](https://gitversion.net/docs/reference/configuration) provides several **modes** that determine how version numbers are calculated based on your branching and commit strategy. These modes cater to different workflows, like feature branching, continuous integration, or release management. Below are all the available modes:
 
 ---
 
@@ -115,5 +115,3 @@ mode: None
 - **GitFlow**: Use if your workflow includes `develop`, `release`, and `hotfix` branches.
 - **Continuous Integration**: Use if you don’t need complex versioning but want unique identifiers for builds.
 - **None**: Use if you don’t want GitVersion to handle versioning at all.
-
-Let me know if you'd like help setting up one of these modes!

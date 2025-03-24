@@ -113,14 +113,18 @@ go mod init dev.azure.com/bnl-ms/AzureFoundation/chartfetch
 ```
 
 # upcoming features
-- **Pipeline**:
+- **Pipeline:**
   - linting
   - vulnerability scan
   - auto gen release notes
-  - Generate container
-- **Application**:
-  - proper output on run
-  - create container template
+  - [x] Generate container
+  - [ ] Modulate currently pipeline into 2 separate reusable templates
+- **Application:**
+  - proper output on run, add customization
+  - [x] create container template
+- **Docs:**
+  - pipeline docs
+  - application docs
 
 # Changelog
 

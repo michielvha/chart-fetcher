@@ -1,6 +1,7 @@
 # Standard pipeline to release go apps for Azure-AWS
 # [Gitversion examples](https://github.com/GitTools/actions/tree/main/docs/examples/azure/gitversion)
-# TODO: Modify pipeline to auto increment patch version using gitVersion & Keep release branching strategy. Write proper docs for the pipeline.
+# DONE: Modify pipeline to auto increment patch version using gitVersion & Keep release branching strategy.
+# TODO: Write proper docs for the pipeline & modulate into 2 reusable templates (binary publish/release | docker publish/release).
 parameters:
 - name: clean
   displayName: Checkout clean

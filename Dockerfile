@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-# Set build-time variable
+# Set build-time variable, imported from pipeline environment during `Build` step
 ARG IMAGE_NAME
 
 # Create a non-root user with a fixed UID and group ID
