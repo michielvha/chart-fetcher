@@ -1,4 +1,8 @@
-[GitVersion](https://gitversion.net/docs/reference/configuration) provides several **modes** that determine how version numbers are calculated based on your branching and commit strategy. These modes cater to different workflows, like feature branching, continuous integration, or release management. Below are all the available modes:
+# [GitVersion](https://gitversion.net/docs/reference/configuration)
+
+provides several **modes** that determine how version numbers are calculated based on your branching and commit strategy. These modes cater to different workflows, like feature branching, continuous integration, or release management. Below are all the available modes:
+
+**DEPRECATED SINCE V6**
 
 ---
 
