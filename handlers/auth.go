@@ -1,8 +1,8 @@
 package handlers
 
 import (
-     "github.com/rs/zerolog/log"
-     "helm.sh/helm/v3/pkg/registry"
+	"github.com/rs/zerolog/log"
+	"helm.sh/helm/v3/pkg/registry"
 )
 
 // Login to the Helm registry
