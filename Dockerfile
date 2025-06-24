@@ -2,6 +2,8 @@ FROM alpine:latest
 
 # Set build-time variable, imported from pipeline environment during `Build` step
 ARG IMAGE_NAME
+# Copy the ARG value to an ENV variable that will persist at runtime
+ENV IMAGE_NAME=${IMAGE_NAME}
 
 # Create a non-root user with a fixed UID and group ID
 RUN addgroup -g 1000 ${IMAGE_NAME} && \
@@ -14,5 +16,5 @@ RUN chmod +x /usr/local/bin/${IMAGE_NAME} && chown ${IMAGE_NAME}:${IMAGE_NAME} /
 # Switch to the non-root user
 USER ${IMAGE_NAME}
 
-# Set the default command to run the binary
-ENTRYPOINT ["/usr/local/bin/${IMAGE_NAME}"]
+# Use shell form to allow variable substitution
+ENTRYPOINT /usr/local/bin/${IMAGE_NAME}
