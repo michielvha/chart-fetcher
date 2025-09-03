@@ -4,8 +4,8 @@ import (
 	"flag"
 	"os"
 
-	"dev.azure.com/bnl-ms/AzureFoundation/charthost/handlers"
-	"dev.azure.com/bnl-ms/AzureFoundation/charthost/helpers"
+	"github.com/michielvha/ChartFetch/handlers"
+	"github.com/michielvha/ChartFetch/helpers"
 	"github.com/rs/zerolog/log"
 )
 

@@ -74,10 +74,10 @@ go doc helm.sh/helm/v3/pkg/repo
 helm registry login myreg.azurecr.io --username $REG1_USERNAME --password-stdin $REG1_PASSWORD
 ````
 
-#### initialize Go project using Azure-Devops
+#### initialize Go project using GitHub
 
 ```golang
-go mod init dev.azure.com/bnl-ms/AzureFoundation/chartfetch
+go mod init github.com/michielvha/ChartFetch
 ```
 
 # upcoming features

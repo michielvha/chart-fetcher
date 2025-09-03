@@ -1,4 +1,4 @@
-module dev.azure.com/bnl-ms/AzureFoundation/charthost
+module github.com/michielvha/ChartFetch
 
 go 1.23.3
 
