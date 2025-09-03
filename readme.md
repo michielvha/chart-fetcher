@@ -37,22 +37,6 @@ Configuration files can be supplied using either ``json`` or ``yaml`` formats.
       "charts": [
         { "name": "kannika", "version": "0.9.1" }
       ]
-    },
-    {
-      "url": "https://engiebnlms.jfrog.io/artifactory/api/helm/prd-helm-virtual",
-      "username_env": "REG1_USERNAME",
-      "password_env": "REG1_PASSWORD",
-      "charts": [
-        { "name": "autopass", "version": "0.1.0" }
-      ]
-    },
-    {
-      "url": "https://engiebnlms.jfrog.io/artifactory/api/helm/prd-helm-external-secrets",
-      "username_env": "REG1_USERNAME",
-      "password_env": "REG1_PASSWORD",
-      "charts": [
-        { "name": "external-secrets", "version": "0.10.7" }
-      ]
     }
   ]
 }
@@ -67,18 +51,12 @@ registries:
     charts:
       - name: "kannika"
         version: "0.9.1"
-  - url: "https://engiebnlms.jfrog.io/artifactory/api/helm/prd-helm-virtual"
+  - url: "quay.io/kannika/charts"
     username_env: "REG1_USERNAME"
     password_env: "REG1_PASSWORD"
     charts:
-      - name: "autopass"
-        version: "0.1.0"
-  - url: "https://engiebnlms.jfrog.io/artifactory/api/helm/prd-helm-external-secrets"
-    username_env: "REG1_USERNAME"
-    password_env: "REG1_PASSWORD"
-    charts:
-      - name: "external-secrets"
-        version: "0.10.7"
+      - name: "kannika"
+        version: "0.9.1"
 ````
 
 ### Troubleshooting
@@ -96,14 +74,6 @@ go doc helm.sh/helm/v3/pkg/repo
 
 ````shell
 helm registry login mslocalfoundationacr.azurecr.io --username $REG1_USERNAME --password-stdin $REG1_PASSWORD
-````
-
-#### Login to Artifactory
-
-To work with Go repositories, first install and configure your Go client. To deploy Go packages into an Artifactory repository, you first need to install and configure JFrog CLI. To start using JFrog CLI, configure the Artifactory server details.
-
-````shell
-jf c add rt-server --artifactory-url https://engiebnlms.jfrog.io/artifactory --user dl6544 --password $TOKEN --interactive=false
 ````
 
 #### initialize Go project using Azure-Devops
