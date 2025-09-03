@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,18 +38,23 @@ func LoadConfig(configPath string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close config file")
+		}
+	}()
 
 	var config Config
-	if strings.HasSuffix(configPath, ".yaml") || strings.HasSuffix(configPath, ".yml") {
+	switch {
+	case strings.HasSuffix(configPath, ".yaml") || strings.HasSuffix(configPath, ".yml"):
 		if err := yaml.NewDecoder(file).Decode(&config); err != nil {
 			return Config{}, err
 		}
-	} else if strings.HasSuffix(configPath, ".json") {
+	case strings.HasSuffix(configPath, ".json"):
 		if err := json.NewDecoder(file).Decode(&config); err != nil {
 			return Config{}, err
 		}
-	} else {
+	default:
 		return Config{}, errors.New("unsupported file format: " + configPath)
 	}
 	return config, nil

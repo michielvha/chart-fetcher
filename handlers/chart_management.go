@@ -66,7 +66,11 @@ func (h *HelmHandler) PullLegacyChart(repo, chart, version, outputPath, username
 		log.Error().Err(err).Str("chartURL", chartURL).Msg("Failed to fetch legacy chart")
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Error().Int("statusCode", resp.StatusCode).Str("chartURL", chartURL).Msg("Unexpected status code while fetching legacy chart")
@@ -84,7 +88,11 @@ func (h *HelmHandler) PullLegacyChart(repo, chart, version, outputPath, username
 		log.Error().Err(err).Str("chartFile", chartFile).Msg("Failed to create chart file")
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close file")
+		}
+	}()
 
 	if _, err := io.Copy(file, resp.Body); err != nil {
 		log.Error().Err(err).Str("chartFile", chartFile).Msg("Failed to write legacy chart data to file")

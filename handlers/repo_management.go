@@ -118,7 +118,11 @@ func (h *HelmHandler) AddAndFetchRepo(repoURL, username, password string) error 
 		log.Error().Err(err).Str("url", repoURL).Msg("Failed to fetch repository index")
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close response body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Error().Int("statusCode", resp.StatusCode).Str("url", repoURL).Msg("Unexpected status while fetching repository index")
