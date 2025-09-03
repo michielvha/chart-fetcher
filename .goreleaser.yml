@@ -55,10 +55,24 @@ signs:
 release:
   draft: false
 changelog:
+  use: git
   filters:
     include:
-      - main
+      - "^feat:"
+      - "^fix:"
+      - "^chore:"
+      - "^docs:"
   sort: asc # Sort commits chronologically (oldest to newest)
+  groups:   # organize your changelog into categories using regular expressions, start commit with feat: or fix:
+    - title: "🚀 Features"
+      regexp: "^.*?feat(\\([\\w]+\\))?!?:.+$"
+      order: 0
+    - title: "🐛 Bug Fixes"
+      regexp: "^.*?fix(\\([\\w]+\\))?!?:.+$"
+      order: 1
+    - title: "🛠 Maintenance"
+      regexp: "^.*?chore(\\([\\w]+\\))?!?:.+$"
+      order: 2
 
 # To check deprecations:
 # https://goreleaser.com/deprecations/
