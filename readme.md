@@ -8,8 +8,6 @@ Our challenge lies in pulling Helm charts from an authenticated registry (Jfrog)
 
 This application is designed to run alongside a web server, serving as a reliable and scalable solution to facilitate Helm chart management in complex, authenticated environments.
 
-[[_TOC_]]
-
 ### **Example Run Scenarios**
 
 | **Scenario**                      | **Result**                                     |
