@@ -71,7 +71,7 @@ go doc helm.sh/helm/v3/pkg/repo
 #### login with helm to ACR
 
 ````shell
-helm registry login mslocalfoundationacr.azurecr.io --username $REG1_USERNAME --password-stdin $REG1_PASSWORD
+helm registry login myreg.azurecr.io --username $REG1_USERNAME --password-stdin $REG1_PASSWORD
 ````
 
 #### initialize Go project using Azure-Devops
