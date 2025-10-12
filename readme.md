@@ -1,12 +1,15 @@
-# ChartFetch
+# Chart Fetcher
 
-The `chartfetch` Go application is a solution designed to address a limitation in our GitOps workflow, which utilizes **ArgoCD** and **Kustomize**. 
+The `chart-fetcher` Go application is a solution designed to address a limitation in **Kustomize** based GitOps workflows. 
 
-Our challenge lies in pulling Helm charts from an authenticated registry (Jfrog), as ArgoCD's Kustomize plugin does not support chart retrieval from registries requiring authentication. To bridge this gap, `chartfetch` acts as an intermediary application capable of:
+The challenge lies in pulling Helm charts from an authenticated registry, as Kustomize's helm plugin does not support chart retrieval from registries requiring authentication. To bridge this gap, `chart-fetcher` acts as an intermediary application capable of:
 - Authenticating with both legacy and OCI-compliant Helm registries.
-- Pulling Helm charts and making them accessible for seamless integration into the GitOps workflow.
+- Pulling Helm charts and making them accessible.
 
-This application is designed to run alongside a web server, serving as a reliable and scalable solution to facilitate Helm chart management in complex, authenticated environments.
+This application is designed to run alongside a web server, serving as a reliable and scalable solution to facilitate Helm chart management in authenticated environments.
+
+> [!NOTE]
+> This is certainly not the most advanced helm client implementation and it does not aim to be. The purpose of this binary is to be easy and straight forward to use, capable of being easily integrated into a `chart-proxy` kubernetes deployment.
 
 ### Example Run Scenarios
 
@@ -68,16 +71,10 @@ go doc "packagename"
 go doc helm.sh/helm/v3/pkg/repo
 ````
 
-#### login with helm to ACR
-
-````shell
-helm registry login myreg.azurecr.io --username $REG1_USERNAME --password-stdin $REG1_PASSWORD
-````
-
 #### initialize Go project using GitHub
 
 ```golang
-go mod init github.com/michielvha/ChartFetch
+go mod init github.com/michielvha/chart-fetcher
 ```
 
 # upcoming features

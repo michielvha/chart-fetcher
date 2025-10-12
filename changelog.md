@@ -10,7 +10,7 @@
   - removed `ioutil` package because [deprecated & redundant](https://go.dev/doc/go1.16#ioutil), incorporated into and since maintained in `io` & `os`.
 ## Version 0.0.1
 ### 🚀 Major Release
-- **Initial Release of ChartFetch**
+- **Initial Release of chart-fetcher**
   - Added support for json & yaml configuration files
   - Added support for environment variables
   - Added support for command line arguments

@@ -4,8 +4,8 @@ import (
 	"flag"
 	"os"
 
-	"github.com/michielvha/ChartFetch/handlers"
-	"github.com/michielvha/ChartFetch/helpers"
+	"github.com/michielvha/chart-fetcher/handlers"
+	"github.com/michielvha/chart-fetcher/helpers"
 	"github.com/rs/zerolog/log"
 )
 

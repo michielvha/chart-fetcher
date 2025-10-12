@@ -1,4 +1,4 @@
-name: Build and Release with Custom Action
+name: Build and Release Go Application
 
 permissions:
   id-token: write
@@ -9,11 +9,12 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
+      - 'examples/**'
       - 'readme.md'
+      - 'changelog.md'
       - '.gitignore'
       - 'manifests/**'
-  workflow_dispatch:  
+  workflow_dispatch:
 
 jobs:
   build-and-release:

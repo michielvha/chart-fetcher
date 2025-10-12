@@ -1,4 +1,4 @@
-module github.com/michielvha/ChartFetch
+module github.com/michielvha/chart-fetcher
 
 go 1.24.2
 

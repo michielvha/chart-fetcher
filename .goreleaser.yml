@@ -1,6 +1,5 @@
-project_name: chartfetch
+project_name: chart-fetcher
 version: 2
-
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
 #before:
@@ -25,8 +24,9 @@ builds:
     goarch:
       - amd64
       # - "386"
-      # - arm
-      # - arm64
+    # - arm
+    # - arm64
+
     ignore:
       - goos: darwin
         goarch: "386"
@@ -63,7 +63,7 @@ changelog:
       - "^chore:"
       - "^docs:"
   sort: asc # Sort commits chronologically (oldest to newest)
-  groups:   # organize your changelog into categories using regular expressions, start commit with feat: or fix:
+  groups: # organize your changelog into categories using regular expressions, start commit with feat: or fix:
     - title: "🚀 Features"
       regexp: "^.*?feat(\\([\\w]+\\))?!?:.+$"
       order: 0
