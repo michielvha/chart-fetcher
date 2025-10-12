@@ -4,13 +4,13 @@ registries:
     charts:
       - name: "kannika"
         version: "0.9.1"
-  - url: "https://engiebnlms.jfrog.io/artifactory/api/helm/prd-helm-virtual"
+  - url: "https://jfrog.io/artifactory/api/helm/helm-virtual"
     username_env: "REG1_USERNAME"
     password_env: "REG1_PASSWORD"
     charts:
       - name: "autopass"
         version: "0.1.0"
-  - url: "https://engiebnlms.jfrog.io/artifactory/api/helm/prd-helm-external-secrets"
+  - url: "https://jfrog.io/artifactory/api/helm/external-secrets"
     username_env: "REG1_USERNAME"
     password_env: "REG1_PASSWORD"
     charts:
