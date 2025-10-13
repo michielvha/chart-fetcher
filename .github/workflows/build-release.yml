@@ -13,7 +13,6 @@ on:
       - 'readme.md'
       - 'changelog.md'
       - '.gitignore'
-      - 'manifests/**'
   workflow_dispatch:
 
 jobs:
@@ -42,7 +41,7 @@ jobs:
           github-token: ${{ secrets.CF_GITHUB_TOKEN }}
           pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
           go-version: '1.25.2'
-          
+
       # 4: Build and Push Docker image
       - name: Build and Push Docker Image
         uses: michielvha/docker-release-action@main

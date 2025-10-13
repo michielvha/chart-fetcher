@@ -14,19 +14,19 @@ This solves the problem where **ArgoCD + Kustomize** cannot pull Helm charts fro
 
 ```
 ┌─────────────────────────────────────────────┐
-│           chart-proxy Pod                    │
+│           chart-proxy Pod                   │
 ├─────────────────────────────────────────────┤
-│  Init Container 1: chart-fetcher             │
-│  - Reads config from ConfigMap               │
+│  Init Container 1: chart-fetcher            │
+│  - Reads config from ConfigMap              │
 │  - Authenticates to registries (via secrets)│
-│  - Pulls .tgz files to /charts volume        │
+│  - Pulls .tgz files to /charts volume       │
 ├─────────────────────────────────────────────┤
-│  Init Container 2: Helm                      │
+│  Init Container 2: Helm                     │
 │  - Generates index.yaml for charts          │
 ├─────────────────────────────────────────────┤
-│  Container: Nginx                            │
-│  - Serves /charts as HTTP repository         │
-│  - No authentication required                │
+│  Container: Nginx                           │
+│  - Serves /charts as HTTP repository        │
+│  - No authentication required               │
 └─────────────────────────────────────────────┘
          │
          ▼
@@ -36,9 +36,8 @@ This solves the problem where **ArgoCD + Kustomize** cannot pull Helm charts fro
 ## 📦 Components
 
 - `namespace.yaml` - Creates the `chart-proxy` namespace
-- `configmap-chartfetch.yaml` - Configuration for which charts to pull
-- `configmap-nginx.yaml` - Nginx server configuration
-- `secret-registry-credentials.yaml` - Registry authentication credentials
+- `config/config.yaml` - Configuration for which charts to pull
+- `config/default.conf` - Nginx server configuration
 - `deployment.yaml` - Main deployment with chart-fetcher + nginx
 - `service.yaml` - ClusterIP service exposing nginx
 - `kustomization.yaml` - Kustomize manifest
@@ -47,13 +46,13 @@ This solves the problem where **ArgoCD + Kustomize** cannot pull Helm charts fro
 
 ### 1. Update Configuration
 
-Edit `configmap-chartfetch.yaml` to specify which charts to pull:
+Edit `config/config.yaml` to specify which charts to pull:
 
 ```yaml
 data:
   config.yaml: |
     registries:
-      - url: "quay.io/my-org/charts"
+      - url: "ghcr.io/my-org/charts"
         is_oci: true
         charts:
           - name: "my-chart"
@@ -62,7 +61,10 @@ data:
 
 ### 2. Add Registry Credentials (if needed)
 
-If your registries require authentication, update the secret:
+> [!NOTE]
+> Showing manual creation as example for simplicity, use a secret management solution in production.
+
+If your registries require authentication, create a secret:
 
 ```bash
 kubectl create secret generic registry-credentials \
@@ -72,16 +74,15 @@ kubectl create secret generic registry-credentials \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-### 3. Deploy with kubectl
+### 3. Deploy with kubectl or Kustomize
 
-```bash
-kubectl apply -k examples/manifests/chart-proxy/
-```
-
-### 4. Deploy with Kustomize
+> [!WARNING]
+> using kustomize via kubectl will de deprecated
 
 ```bash
 kustomize build examples/manifests/chart-proxy/ | kubectl apply -f -
+# or
+kubectl apply -k examples/manifests/chart-proxy/
 ```
 
 ## 🔧 Usage in ArgoCD/Kustomize
@@ -141,31 +142,6 @@ helm repo add local-proxy http://localhost:8080
 helm search repo local-proxy
 ```
 
-## 📝 Configuration Details
-
-### chart-fetcher Configuration
-
-The `configmap-chartfetch.yaml` supports:
-
-**OCI Registries:**
-```yaml
-- url: "ghcr.io/myorg/charts"
-  is_oci: true
-  charts:
-    - name: "mychart"
-      version: "1.0.0"
-```
-
-**Legacy Helm Repositories:**
-```yaml
-- url: "https://charts.example.com"
-  username_env: "REG1_USERNAME"
-  password_env: "REG1_PASSWORD"
-  charts:
-    - name: "mychart"
-      version: "1.0.0"
-```
-
 ### Environment Variables
 
 Set in `secret-registry-credentials`:
@@ -179,7 +155,7 @@ You can add more environment variables in the deployment for multiple registries
 To pull new charts or versions:
 
 1. Update the ConfigMap with new chart definitions
-2. Delete the pod to trigger a restart:
+2. Delete the pod to trigger a restart if not using reloader:
    ```bash
    kubectl delete pod -n chart-proxy -l app=chart-proxy
    ```
@@ -213,27 +189,6 @@ kubectl logs -n chart-proxy deployment/chart-proxy -c nginx
 3. **Cannot connect**: Ensure service is created and pod is running
 
 ## 🎨 Customization
-
-### Change the chart-fetcher image
-
-Update the image in `deployment.yaml`:
-```yaml
-- name: chartfetch
-  image: your-registry/chartfetch:tag
-```
-
-### Add resource limits
-
-Edit `deployment.yaml` to add resources:
-```yaml
-resources:
-  limits:
-    memory: "128Mi"
-    cpu: "100m"
-  requests:
-    memory: "64Mi"
-    cpu: "50m"
-```
 
 ### Expose externally
 
