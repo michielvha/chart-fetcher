@@ -10,8 +10,7 @@ on:
       - main
     paths-ignore:
       - 'examples/**'
-      - 'readme.md'
-      - 'changelog.md'
+      - 'README.md'
       - '.gitignore'
   workflow_dispatch:
 
