@@ -1,5 +1,10 @@
 # Chart Fetcher
 
+
+[![Build and Release](https://github.com/michielvha/chart-fetcher/actions/workflows/build-release.yml/badge.svg)](https://github.com/michielvha/chart-fetcher/actions/workflows/build-release.yml)
+[![Release](https://img.shields.io/github/release/michielvha/chart-fetcher.svg?style=flat-square)](https://github.com/michielvha/chart-fetcher/releases/latest)
+[![Go Report Card]][go-report-card]
+
 The `chart-fetcher` Go application is a solution designed to address a limitation in **Kustomize** based GitOps workflows. 
 
 The challenge lies in pulling Helm charts from an authenticated registry, as Kustomize's helm plugin does not support chart retrieval from registries requiring authentication. To bridge this gap, `chart-fetcher` acts as an intermediary application capable of:
@@ -9,7 +14,7 @@ The challenge lies in pulling Helm charts from an authenticated registry, as Kus
 This application is designed to run alongside a web server, serving as a reliable and scalable solution to facilitate Helm chart management in authenticated environments.
 
 > [!NOTE]
-> This is certainly not the most advanced helm client implementation and it does not aim to be. The purpose of this binary is to be easy and straight forward to use, capable of being easily integrated into a `chart-proxy` kubernetes deployment.
+> This isn't trying to be a full-featured Helm client. It does one thing well: pulling charts from authenticated registries. It's built to be simple and straightforward, perfect for integrating into a `chart-proxy` Kubernetes deployment to point Kustomize towards.
 
 ### Example Run Scenarios
 
@@ -90,3 +95,11 @@ go mod init github.com/michielvha/chart-fetcher
   - pipeline docs
   - application docs
 
+
+[![Go Doc](https://pkg.go.dev/badge/github.com/michielvha/chart-fetcher.svg)](https://pkg.go.dev/github.com/michielvha/chart-fetcher)
+[![license](https://img.shields.io/github/license/michielvha/chart-fetcher.svg?style=flat-square)](LICENSE)
+
+[Go Report Card]: https://goreportcard.com/badge/github.com/michielvha/chart-fetcher
+[go-report-card]: https://goreportcard.com/report/github.com/michielvha/chart-fetcher
+[CodeQL]: https://github.com/michielvha/chart-fetcher/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main
+[code-ql]: https://github.com/michielvha/chart-fetcher/actions/workflows/github-code-scanning/codeql
