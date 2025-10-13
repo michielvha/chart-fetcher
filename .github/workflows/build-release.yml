@@ -25,18 +25,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history to use GitVersion
+          fetch-depth: 0  # Fetch all the history for GitVersion
           persist-credentials: true
+
       # 2: Call our custom `GitVersion action` to tag the repo
       - name: Tag with GitVersion
         id: gitversion
-        uses: michielvha/gitversion-tag-action@v4
+        uses: michielvha/gitversion-tag-action@v5
         with:
-          configFilePath: gitversion.yml  # Path to your GitVersion config file
+          configFilePath: gitversion.yml
+
       # 3: Use the custom build-release action
-      - name: Build and Release
-        uses: michielvha/goreleaser-action@v1
+      - name: Build and Release Go Binary
+        uses: michielvha/goreleaser-action@main
         with:
           github-token: ${{ secrets.CF_GITHUB_TOKEN }}
           pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
           go-version: '1.25.2'
+          
+      # 4: Build and Push Docker image
+      - name: Build and Push Docker Image
+        uses: michielvha/docker-release-action@main
+        with:
+          username: michielvha
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          project: 'chart-fetcher' # This should match the compiled binary name, see goreleaser config
+          version: ${{ steps.gitversion.outputs.semVer }}
+          platforms: 'linux/amd64,linux/arm64'
+          context: '.'
