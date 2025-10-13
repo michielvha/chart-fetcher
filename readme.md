@@ -83,17 +83,9 @@ docker run -v /path/to/your/config.yaml:/app/config.yaml -e CONFIG_PATH=/app/con
 For a kubernetes example, check [here](examples/manifests/chart-proxy/deployment.yaml)
 
 # upcoming features
-- **Pipeline:**
-  - linting
-  - vulnerability scan
-  - auto gen release notes
-  - [] Generate container
+
 - **Application:**
   - proper output on run, add customization
-  - [x] create container template
-- **Docs:**
-  - pipeline docs
-  - application docs
 
 
 [![Go Doc](https://pkg.go.dev/badge/github.com/michielvha/chart-fetcher.svg)](https://pkg.go.dev/github.com/michielvha/chart-fetcher)
