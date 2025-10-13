@@ -65,22 +65,22 @@ registries:
         version: "0.9.1"
 ````
 
-### Troubleshooting
+### Docker Configuration Override
 
-#### Gather official docs
+The Docker container includes a [placeholder config](examples/config/config.yaml). Replace it with your own:
 
-````shell
-go doc "packagename"
+```bash
+# Mount your config file
+docker run -v /path/to/your/config.yaml:/home/chart-fetcher/config.yaml michielvha/chart-fetcher:latest
 
-# example:
-go doc helm.sh/helm/v3/pkg/repo
-````
+# Or use command line flag
+docker run -v /path/to/your/config.yaml:/app/config.yaml michielvha/chart-fetcher:latest --config /app/config.yaml
 
-#### initialize Go project using GitHub
-
-```golang
-go mod init github.com/michielvha/chart-fetcher
+# Or use environment variable
+docker run -v /path/to/your/config.yaml:/app/config.yaml -e CONFIG_PATH=/app/config.yaml michielvha/chart-fetcher:latest
 ```
+
+For a kubernetes example, check [here](examples/manifests/chart-proxy/deployment.yaml)
 
 # upcoming features
 - **Pipeline:**
