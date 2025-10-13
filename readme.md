@@ -86,6 +86,8 @@ For a kubernetes example, check [here](examples/manifests/chart-proxy/deployment
 
 - **Application:**
   - proper output on run, add customization
+- **Pipeline**
+  - Create proper GPG signing key, currently using an example one.
 
 
 [![Go Doc](https://pkg.go.dev/badge/github.com/michielvha/chart-fetcher.svg)](https://pkg.go.dev/github.com/michielvha/chart-fetcher)
