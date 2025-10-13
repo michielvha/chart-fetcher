@@ -17,8 +17,8 @@ spec:
         fsGroup: 1000
       initContainers:
         # chart-fetcher pulls charts from registries based on config
-        - name: chartfetch
-          image: ghcr.io/michielvha/chartfetch:latest # Update with your actual image
+        - name: chart-fetcher
+          image: ghcr.io/michielvha/chart-fetcher:latest
           imagePullPolicy: Always
           command: ["/usr/local/bin/chart-fetcher"]
           args:
