@@ -39,4 +39,4 @@ jobs:
         with:
           github-token: ${{ secrets.CF_GITHUB_TOKEN }}
           pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
-          go-version: '1.24.2'
+          go-version: '1.25.2'
