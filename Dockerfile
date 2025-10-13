@@ -20,8 +20,9 @@ RUN addgroup -g 1000 ${IMAGE_NAME} && \
 COPY dist/${IMAGE_NAME}_${TARGETOS}_${TARGETARCH}*/${IMAGE_NAME} /usr/local/bin/${IMAGE_NAME}
 RUN chmod +x /usr/local/bin/${IMAGE_NAME} && chown ${IMAGE_NAME}:${IMAGE_NAME} /usr/local/bin/${IMAGE_NAME}
 
-# Switch to the non-root user
+# Switch to the non-root user & set working directory
 USER ${IMAGE_NAME}
+WORKDIR /home/${IMAGE_NAME}
 
 # Use exec form with environment variable substitution
 ENTRYPOINT ["/bin/sh", "-c", "/usr/local/bin/${IMAGE_NAME}"]
