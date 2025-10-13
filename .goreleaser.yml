@@ -1,10 +1,6 @@
 project_name: chart-fetcher
 version: 2
-# Visit https://goreleaser.com for documentation on how to customize this
-# behavior.
-#before:
-#  hooks:
-#    - go mod tidy
+
 builds:
   - env:
       # goreleaser does not work with CGO, it could also complicate
@@ -17,25 +13,19 @@ builds:
     ldflags:
       - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
     goos:
-      # - freebsd
       - windows
       - linux
-      # - darwin
+      - darwin
     goarch:
       - amd64
-      # - "386"
-    # - arm
-    # - arm64
-
-    ignore:
-      - goos: darwin
-        goarch: "386"
+      - arm64
     no_unique_dist_dir: true
     binary: '{{ .ProjectName }}' # _v{{ .Version }} # DONE: Decide if we want to keep the _v there instead of just _, pipeline needs to be adjusted if changed
 snapshot:
   version_template: '{{ incpatch .Version }}'
 archives:
-  - format: zip
+  - formats:
+    - zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
@@ -63,7 +53,7 @@ changelog:
       - "^chore:"
       - "^docs:"
   sort: asc # Sort commits chronologically (oldest to newest)
-  groups: # organize your changelog into categories using regular expressions, start commit with feat: or fix:
+  groups:   # organize your changelog into categories using regular expressions, start commit with feat: or fix:
     - title: "🚀 Features"
       regexp: "^.*?feat(\\([\\w]+\\))?!?:.+$"
       order: 0
