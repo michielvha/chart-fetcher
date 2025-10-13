@@ -12,16 +12,21 @@ spec:
       labels:
         app: chart-proxy
     spec:
+      # Make mounted volumes group-writable by GID 1000 so UID 1000 can write
+      securityContext:
+        fsGroup: 1000
       initContainers:
         # chart-fetcher pulls charts from registries based on config
         - name: chartfetch
           image: ghcr.io/michielvha/chartfetch:latest # Update with your actual image
           imagePullPolicy: Always
-          command: ['/usr/local/bin/chart-fetcher']
+          command: ["/usr/local/bin/chart-fetcher"]
           args:
-            - '--config=/config/config.yaml'
-            - '--outputPath=/charts'
+            - "--config=/config/config.yaml"
+            - "--outputPath=/charts"
           env:
+            - name: HOME
+              value: /home/app
             # Add any registry credentials as environment variables
             - name: REG1_USERNAME
               valueFrom:
@@ -35,20 +40,38 @@ spec:
                   name: registry-credentials
                   key: password
                   optional: true
+          workingDir: /charts
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: config
               mountPath: /config
               readOnly: true
             - name: charts
               mountPath: /charts
+            - name: tmp
+              mountPath: /tmp
         - name: helm-repo-index
           # Generate Helm repo index for the pulled charts
-
           image: alpine/helm:3.17.2
-          command: ['sh', '-c', 'helm repo index /usr/share/nginx/html --url http://localhost']
+          command: ["sh", "-c", "helm repo index /usr/share/nginx/html --url http://localhost"]
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: charts
               mountPath: /usr/share/nginx/html
+            - name: tmp
+              mountPath: /tmp
       containers:
         # Nginx serves the charts as a Helm repository
         - name: nginx
@@ -88,6 +111,9 @@ spec:
             name: chartfetch-config
         - name: charts
           emptyDir: {}
+        - name: tmp
+          emptyDir:
+            medium: Memory
         - name: nginx-config
           configMap:
             name: nginx-config
