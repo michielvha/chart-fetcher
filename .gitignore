@@ -27,3 +27,5 @@ artifactoryUrlFile
 charts/**
 
 .env
+
+chart-fetcher
