@@ -86,6 +86,7 @@ For a kubernetes example, check [here](examples/manifests/chart-proxy/deployment
 
 - **Application:**
   - proper output on run, add customization
+  - Full hardening of container image, distroless, remove package manager, etc, the whole 9 yards
 - **Pipeline**
   - Create proper GPG signing key, currently using an example one.
 
