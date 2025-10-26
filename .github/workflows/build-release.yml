@@ -37,7 +37,7 @@ jobs:
       - name: Build and Release Go Binary
         uses: michielvha/goreleaser-action@main
         with:
-          github-token: ${{ secrets.CF_GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
           go-version: '1.25.2'
 
