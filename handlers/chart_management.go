@@ -1,10 +1,13 @@
-// Contains functions related to chart pulling
+// Package handlers
+// Purpose: Contains functions related to chart pulling for both OCI and legacy formats
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,9 +50,16 @@ func (h *HelmHandler) PullLegacyChart(repo, chart, version, outputPath, username
 
 	log.Info().Str("chartURL", chartURL).Msg("Resolved chart URL")
 
+	// Validate the chart URL before use
+	parsedURL, err := url.ParseRequestURI(chartURL)
+	if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+		log.Error().Str("chartURL", chartURL).Msg("Invalid or disallowed chart URL scheme")
+		return fmt.Errorf("invalid chart URL: %s", chartURL)
+	}
+
 	// Prepare the HTTP client and request
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", chartURL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, chartURL, nil)
 	if err != nil {
 		log.Error().Err(err).Str("chartURL", chartURL).Msg("Failed to create request for legacy chart")
 		return err
@@ -61,7 +71,7 @@ func (h *HelmHandler) PullLegacyChart(repo, chart, version, outputPath, username
 	}
 
 	// Execute the request
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) // #nosec G704 -- URL scheme is validated above to be http or https only
 	if err != nil {
 		log.Error().Err(err).Str("chartURL", chartURL).Msg("Failed to fetch legacy chart")
 		return err
@@ -79,11 +89,11 @@ func (h *HelmHandler) PullLegacyChart(repo, chart, version, outputPath, username
 
 	// Save the chart to disk
 	chartFile := filepath.Join(outputPath, filepath.Base(chartURL))
-	if err := os.MkdirAll(outputPath, 0o755); err != nil {
+	if err := os.MkdirAll(outputPath, 0o750); err != nil {
 		log.Error().Err(err).Str("outputPath", outputPath).Msg("Failed to create output directory")
 		return err
 	}
-	file, err := os.Create(chartFile)
+	file, err := os.Create(chartFile) // #nosec G304 -- chartFile is constructed from a validated URL base name and a caller-supplied output path
 	if err != nil {
 		log.Error().Err(err).Str("chartFile", chartFile).Msg("Failed to create chart file")
 		return err
@@ -119,13 +129,13 @@ func (h *HelmHandler) PullOCIChart(repo, chart, version, outputPath string) erro
 	log.Info().Str("chartRef", chartRef).Msg("Successfully pulled OCI Helm chart")
 
 	// Save the chart to disk
-	if err := os.MkdirAll(outputPath, 0o755); err != nil {
+	if err := os.MkdirAll(outputPath, 0o750); err != nil {
 		log.Error().Err(err).Str("outputPath", outputPath).Msg("Failed to create output directory")
 		return err
 	}
 
 	chartFile := filepath.Join(outputPath, fmt.Sprintf("%s-%s.tgz", chart, version))
-	if err := os.WriteFile(chartFile, pullResult.Chart.Data, 0o644); err != nil {
+	if err := os.WriteFile(chartFile, pullResult.Chart.Data, 0o600); err != nil {
 		log.Error().Err(err).Str("chartFile", chartFile).Msg("Failed to write OCI chart to file")
 		return err
 	}

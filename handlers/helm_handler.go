@@ -1,3 +1,5 @@
+// Package handlers
+// Purpose: Initiate the helm client
 package handlers
 
 import (

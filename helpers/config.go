@@ -1,4 +1,4 @@
-// helpers/config.go
+// Package helpers
 // Purpose: help with handling the configuration file.
 package helpers
 
@@ -34,7 +34,7 @@ type Config struct {
 
 // LoadConfig handles opening the config file, detecting the format, and decoding it.
 func LoadConfig(configPath string) (Config, error) {
-	file, err := os.Open(configPath)
+	file, err := os.Open(configPath) // #nosec G304 -- configPath is supplied by the operator via CLI flag or environment variable, not user input
 	if err != nil {
 		return Config{}, err
 	}

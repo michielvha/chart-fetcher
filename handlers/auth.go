@@ -1,3 +1,5 @@
+// Package handlers
+// Purpose: provides functions for handling authentication with the Helm registry.
 package handlers
 
 import (

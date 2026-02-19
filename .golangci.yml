@@ -1,4 +1,6 @@
-# TODO: Look into properly implementing this. Currently using a basic config.
+# Copyright (c) 2025 VH & Co BV. Licensed under MIT. See LICENSE for details.
+
+# Reference: https://golangci-lint.run/usage/configuration/
 version: "2"
 
 run:
@@ -11,6 +13,17 @@ linters:
     - staticcheck
     - unused
     - gocritic
+    - gosec
+    # Additional production essentials:
+    - ineffassign      # Detects ineffectual assignments
+    - unconvert        # Removes unnecessary type conversions
+    - bodyclose        # Ensures HTTP response bodies are closed
+    - noctx            # Finds HTTP requests without context
+    - contextcheck     # Ensures contexts are used correctly
+    - errchkjson       # Checks json.Marshal error returns
+    - exhaustive       # Checks switch statements are exhaustive
+    - nilnil           # Checks functions don't return (nil, nil)
+    - misspell         # Catches spelling errors
 
 formatters:
   enable:
@@ -18,6 +31,3 @@ formatters:
     - goimports
     - gci
     - gofmt
-    # - golines
-
-# Reference: https://golangci-lint.run/usage/configuration/

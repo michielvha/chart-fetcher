@@ -1,7 +1,9 @@
-// Contains functions related to repository management
+// Package handlers
+// Purpose: Contains functions related to repository management
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,7 +23,7 @@ func (h *HelmHandler) EnsureRepoFileExists() error {
 	// Check if the repository file exists
 	if _, err := os.Stat(repoFile); os.IsNotExist(err) {
 		// Create the directory if it doesn't exist
-		if err := os.MkdirAll(filepath.Dir(repoFile), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(repoFile), 0o750); err != nil {
 			log.Error().Err(err).Msg("Failed to create repository config directory")
 			return err
 		}
@@ -100,8 +102,15 @@ func (h *HelmHandler) AddAndFetchRepo(repoURL, username, password string) error 
 	// Prepare the HTTP client
 	client := &http.Client{}
 
+	// Validate the repo URL scheme before use
+	parsedIndexURL, err := url.ParseRequestURI(fmt.Sprintf("%s/index.yaml", repoURL))
+	if err != nil || (parsedIndexURL.Scheme != "http" && parsedIndexURL.Scheme != "https") {
+		log.Error().Str("url", repoURL).Msg("Invalid or disallowed repository URL scheme")
+		return fmt.Errorf("invalid repository URL: %s", repoURL)
+	}
+
 	// Create the request with basic authentication
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/index.yaml", repoURL), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, parsedIndexURL.String(), nil)
 	if err != nil {
 		log.Error().Err(err).Str("url", repoURL).Msg("Failed to create request for repository index")
 		return err
@@ -113,7 +122,7 @@ func (h *HelmHandler) AddAndFetchRepo(repoURL, username, password string) error 
 	}
 
 	// Execute the request
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) // #nosec G704 -- URL scheme is validated above to be http or https only
 	if err != nil {
 		log.Error().Err(err).Str("url", repoURL).Msg("Failed to fetch repository index")
 		return err
@@ -130,7 +139,7 @@ func (h *HelmHandler) AddAndFetchRepo(repoURL, username, password string) error 
 	}
 
 	// Ensure the directory for the index file exists before writing
-	if err := os.MkdirAll(filepath.Dir(indexFile), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(indexFile), 0o750); err != nil { // #nosec G703 -- indexFile is constructed from the Helm settings cache dir and a sanitised repo name
 		log.Error().Err(err).Str("directory", filepath.Dir(indexFile)).Msg("Failed to create directory for repository index")
 		return err
 	}
@@ -141,7 +150,7 @@ func (h *HelmHandler) AddAndFetchRepo(repoURL, username, password string) error 
 		log.Error().Err(err).Msg("Failed to read repository index")
 		return err
 	}
-	if err := os.WriteFile(indexFile, data, 0o644); err != nil {
+	if err := os.WriteFile(indexFile, data, 0o600); err != nil { // #nosec G703 -- indexFile is constructed from the Helm settings cache dir and a sanitised repo name
 		log.Error().Err(err).Str("indexFile", indexFile).Msg("Failed to write repository index")
 		return err
 	}

@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.23
 
 # - Set build-time variables -
 # imported from pipeline environment during `Build` step
