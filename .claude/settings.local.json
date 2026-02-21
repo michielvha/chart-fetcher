@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd C:\\\\Users\\\\mike\\\\code\\\\personal\\\\ChartFetch:*)"
+      "Bash(cd C:\\\\Users\\\\mike\\\\code\\\\personal\\\\ChartFetch:*)",
+      "Bash(cd \"C:\\\\Users\\\\mike\\\\code\\\\personal\\\\ChartFetch\" && go get golang.org/x/crypto@latest 2>&1)",
+      "Bash(cd \"C:\\\\Users\\\\mike\\\\code\\\\personal\\\\ChartFetch\" && go mod tidy 2>&1)",
+      "Bash(cd \"C:\\\\Users\\\\mike\\\\code\\\\personal\\\\ChartFetch\" && go mod download && go mod tidy 2>&1)"
     ]
   }
 }

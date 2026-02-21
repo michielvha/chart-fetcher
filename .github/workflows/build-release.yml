@@ -29,7 +29,7 @@ jobs:
       # 2: Call our custom `GitVersion action` to tag the repo
       - name: Tag with GitVersion
         id: gitversion
-        uses: michielvha/gitversion-tag-action@v5
+        uses: michielvha/gitversion-tag-action@v6
         with:
           configFilePath: gitversion.yml
 
@@ -42,7 +42,7 @@ jobs:
 
       # 4: Scan filesystem for CVEs, secrets, and IaC misconfigurations
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -57,7 +57,7 @@ jobs:
         with:
           github-token: ${{ github.token }}
           pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
-          go-version: '1.25.2'
+          go-version: '1.26'
 
       # 6: Build and Push Docker image
       - name: Build and Push Docker Image
