@@ -2,7 +2,8 @@ project_name: chart-fetcher
 version: 2
 
 builds:
-  - env:
+  - main: ./cmd/chart-fetcher
+    env:
       # goreleaser does not work with CGO, it could also complicate
       # usage by users in CI/CD systems like Terraform Cloud where
       # they are unable to install libraries.

@@ -1,6 +1,5 @@
-// Package handlers
-// Purpose: Initiate the helm client
-package handlers
+// Package helm manages Helm registry and repository operations.
+package helm
 
 import (
 	"github.com/rs/zerolog/log"
@@ -8,14 +7,14 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 )
 
-// HelmHandler manages Helm operations
+// HelmHandler manages Helm operations.
 type HelmHandler struct {
 	RegistryClient *registry.Client
 	Settings       *cli.EnvSettings
 	RepoNames      map[string]string
 }
 
-// NewHelmHandler initializes and returns a HelmHandler
+// NewHelmHandler initializes and returns a HelmHandler.
 func NewHelmHandler() (*HelmHandler, error) {
 	settings := cli.New()
 	registryClient, err := registry.NewClient(
@@ -30,5 +29,6 @@ func NewHelmHandler() (*HelmHandler, error) {
 	return &HelmHandler{
 		RegistryClient: registryClient,
 		Settings:       settings,
+		RepoNames:      make(map[string]string),
 	}, nil
 }

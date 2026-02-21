@@ -33,7 +33,25 @@ jobs:
         with:
           configFilePath: gitversion.yml
 
-      # 3: Use the custom build-release action
+      # 3: Check Go module vulnerabilities
+      - name: Run govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-input: '1.26'
+          go-package: './...'
+
+      # 4: Scan filesystem for CVEs, secrets, and IaC misconfigurations
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret,misconfig'
+
+      # 5: Use the custom build-release action
       - name: Build and Release Go Binary
         uses: michielvha/goreleaser-action@main
         with:
@@ -41,7 +59,7 @@ jobs:
           pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
           go-version: '1.25.2'
 
-      # 4: Build and Push Docker image
+      # 6: Build and Push Docker image
       - name: Build and Push Docker Image
         uses: michielvha/docker-release-action@main
         with:

@@ -1,6 +1,6 @@
 module github.com/michielvha/chart-fetcher
 
-go 1.25.2
+go 1.26
 
 require (
 	github.com/rs/zerolog v1.34.0

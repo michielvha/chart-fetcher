@@ -1,13 +1,11 @@
-// Package handlers
-// Purpose: provides functions for handling authentication with the Helm registry.
-package handlers
+package helm
 
 import (
 	"github.com/rs/zerolog/log"
 	"helm.sh/helm/v3/pkg/registry"
 )
 
-// Login to the Helm registry
+// Login authenticates with an OCI-compliant Helm registry.
 func (h *HelmHandler) Login(url, username, password string) error {
 	log.Info().Str("url", url).Msg("Attempting to log in to the Helm registry")
 
