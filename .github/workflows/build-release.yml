@@ -42,7 +42,7 @@ jobs:
 
       # 4: Scan filesystem for CVEs, secrets, and IaC misconfigurations
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@0.34.1
         with:
           scan-type: 'fs'
           scan-ref: '.'
