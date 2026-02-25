@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Fetch all the history for GitVersion
-          persist-credentials: true
+          persist-credentials: false  # Avoids duplicate Authorization header (400) from runner + checkout both injecting the token
 
       # 2: Call our custom `GitVersion action` to tag the repo
       - name: Tag with GitVersion
@@ -32,6 +32,7 @@ jobs:
         uses: michielvha/gitversion-tag-action@v6
         with:
           configFilePath: gitversion.yml
+          token: ${{ github.token }}  # Explicit token needed since persist-credentials is false
 
       # 3: Check Go module vulnerabilities
       - name: Run govulncheck
